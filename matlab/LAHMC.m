@@ -53,7 +53,6 @@ function [X, state] = LAHMC( opts, state, varargin )
     epsilon = getField( opts, 'epsilon', 0.1 );
     M = getField(opts, 'M', 10);
     K = getField( opts, 'K', 4);
-    K = getField( opts, 'K', 10); % DEBUG
     alpha = getField( opts, 'alpha', 0.2);
     beta = alpha^(1 / (epsilon*M));
     beta = getField( opts, 'beta', beta);    
@@ -237,13 +236,13 @@ function [state] = leap_HMC(state,ind,opts,varargin)
         Vhalf(:,ind) = V0(:,ind) - epsilon/2 * dEdX0(:,ind);    
         X1(:,ind) = X0(:,ind) + epsilon * Vhalf(:,ind);
         dEdX1(:,ind) = f_dEdX( X1(:,ind), varargin{:} );
-        E1(:,ind) = f_E( X1(:,ind), varargin{:});
         V1(:,ind) = Vhalf(:,ind) - epsilon/2 * dEdX1(:,ind);
         state.V(:,ind) = V1(:,ind);
         state.X(:,ind) = X1(:,ind);
         state.E(:,ind) = E1(:,ind);
         state.dEdX(:,ind) = dEdX1(:,ind);
     end
+    state.E(:,ind) = f_E( state.X(:,ind), varargin{:});
 end
 
 function [H] = hamiltonian_HMC(state,ind)
