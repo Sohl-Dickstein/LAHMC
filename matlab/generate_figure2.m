@@ -165,7 +165,7 @@ for target_model_i = 1:3
         if (mod( ii, ceil(Nsamp/50) ) == 0)
             fprintf('%d / %d in %f sec (%f sec remaining)\r', ii, Nsamp, toc(ttt), toc(ttt)*Nsamp/ii - toc(ttt) );
         end
-        if (mod( ii, ceil(Nsamp/5) ) == 0) || (ii == Nsamp) || RUN_FLAG == 0
+        if (mod( ii, ceil(Nsamp/4) ) == 0) || (ii == Nsamp) || RUN_FLAG == 0
             fprintf('%d / %d in %f sec (%f sec remaining)\n', ii, Nsamp, toc(ttt), toc(ttt)*Nsamp/ii - toc(ttt) );
             
             for jj = 1:length(names)
