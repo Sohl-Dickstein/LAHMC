@@ -1,0 +1,13 @@
+% Author: Jascha Sohl-Dickstein, Mayur Mudigonda (2014)
+% Web: http://redwood.berkeley.edu/mayur
+% Web: http://redwood.berkeley.edu/jascha
+% This software is made available under the Creative Commons
+% Attribution-Noncommercial License.
+% (http://creativecommons.org/licenses/by-nc/3.0/)
+
+function dEdX = dEdX_gauss( X, J )
+	% return the gradient with respect to X for the energy of each sample
+	% (column vector) in X for a Gaussian with inverse covariance matrix
+	% (coupling matrix) J
+    dEdX = 0.5*J*X + 0.5*J'*X;
+end
