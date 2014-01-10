@@ -8,4 +8,4 @@ LAHMC is described in the paper:<br>
 > Hamiltonian Monte Carlo Without Detailed Balance.<br>
 > International Conference on Machine Learning. 2014
 
-Code reproducing Figure 2 and Table 1 of the paper, and demonstrating usage of the sampler, can be found in *python/generate_figure_2.py* and *matlab/generate_figure_2.m*.
+Code reproducing Figure 2 and Table 1 of the paper, and demonstrating usage of the sampler, can be found in *python/generate_figure_2.py* and *matlab/generate_figure_2.m*.  (The exact plots appearing in the paper were generated using the MATLAB version of the code.)
