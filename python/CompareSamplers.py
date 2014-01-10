@@ -1,4 +1,4 @@
-from qNHMC import qNHMC
+from LAHMC import LAHMC
 import matplotlib.pyplot as plt
 import distributions
 import numpy as np
@@ -60,14 +60,16 @@ def save_results(history, filename):
     """
     np.savez(filename, history=history)
 
-def run_all(base_filename, num_steps=1000, nbatch=100):
-    np.random.seed(0) # make experiments repeatable
+def run_all(base_filename, num_steps=1000, nbatch=2000):
+    #np.random.seed(0) # make experiments repeatable
 
     filename = "%s_%s.npz"%(base_filename, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     history = dict()
 
+    #np.random.seed(0) # make experiments repeatable
     distribution_list = [distributions.Gaussian(ndims=2, nbatch=nbatch, log_conditioning=6), ]
     sampler_list = ['LAHMC', 'HMC',]
+    #sampler_list = ['HMC',]
 
     for distribution in distribution_list:
         cw = counting_wrapper(distribution.E, distribution.dEdX)
@@ -75,17 +77,25 @@ def run_all(base_filename, num_steps=1000, nbatch=100):
         history[dist_name] = dict()
         for sampler_name in sampler_list:
             if sampler_name == 'LAHMC':
-                sampler = sampler_class(distribution.Xinit, cw.E, cw.dEdX)
+                sampler = LAHMC(distribution.Xinit, cw.E, cw.dEdX, epsilon=1., beta=0.1)
             elif sampler_name == 'HMC':
+                # 1 look-ahead step corresponds to standard HMC
+                sampler = LAHMC(distribution.Xinit, cw.E, cw.dEdX, epsilon=1., beta=0.1, num_look_ahead_steps=1)
             else:
                 raise Exception("unknown sampler %s"%(sampler_name))
-            np.random.seed(0) # make experiments repeatable
+            # np.random.seed(0) # make experiments repeatable
             history[dist_name][sampler_name] = []
             for ii in range(num_steps):
-                X = sampler.sample(num_steps = 10)
+                X = sampler.sample(num_steps = 25)
                 history[dist_name][sampler_name].append({'X':X, 'E_count':cw.E_count, 'dEdX_count':cw.dEdX_count})
             # save the current state of the history
             save_results(history, filename)
+
+            # DEBUG
+            print np.dot(X, X.T)/nbatch
+            print np.dot(distribution.Xinit, distribution.Xinit.T)/nbatch
+        1./0
+
     return filename
 
 if __name__ == '__main__':
