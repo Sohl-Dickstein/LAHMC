@@ -59,10 +59,11 @@ def plot_all_distributions(history):
 			corr = calc_corr(hist_single)
 			t_diff = np.linspace(0, nfunc, corr.shape[0])
 			plt.plot(t_diff, corr, label=samp_name)
-	plt.legend()
-	plt.xlabel('Gradient Evaluations')
-	plt.ylabel('Autocorrelation')
-	plt.draw()
+		plt.legend()
+		plt.xlabel('Gradient Evaluations')
+		plt.ylabel('Autocorrelation')
+		plt.title(dist_name)
+		plt.grid()
 	plt.show()
 
 
@@ -81,7 +82,7 @@ def save_results(history, filename):
 	"""
 	np.savez(filename, history=history)
 
-def run_all(base_filename, num_steps=200, nbatch=100):
+def run_all(base_filename, num_steps=100, nbatch=100):
 	"""
 	Run all the samplers for all the target distributions, and save the
 	resulting history.
@@ -115,7 +116,7 @@ def run_all(base_filename, num_steps=200, nbatch=100):
 			print "\n\nSampling from %s using %s"%(dist_name, sampler_name)
 			history[dist_name][sampler_name] = []
 			for ii in range(num_steps):
-				X = sampler.sample(num_steps = 10)
+				X = sampler.sample(num_steps = 50)
 				history[dist_name][sampler_name].append({'X':X.copy(), 'E_count':cw.E_count, 'dEdX_count':cw.dEdX_count})
 			# save the current state of the history
 			save_results(history, filename)
