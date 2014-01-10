@@ -9,4 +9,4 @@ class Gaussian(object):
     def E(self, X):
         return np.sum(X*np.dot(self.J,X), axis=0).reshape((1,-1))/2.
     def dEdX(self, X):
-        return np.dot(self.J,X)
+        return np.dot(self.J,X)/2. + np.dot(self.J.T,X)/2.

@@ -31,7 +31,7 @@ def calc_cov(hist_single):
     for t_gap in range(1, T-1):
         c[t_gap] = np.mean(X[:,:,:-t_gap]*X[:,:,t_gap:])
 
-    return c
+    return c/c[0]
 
 def plot_all_distributions(history):
     for dist_name in history.keys():
@@ -41,11 +41,16 @@ def plot_all_distributions(history):
             hist_single = history[dist_name][samp_name]
             nsteps = len(hist_single)
             nbatch = hist_single[-1]['X'].shape[1]
-            nfunc = (hist_single[-1]['dEdX_count'] + hist_single[-1]['E_count'])/nbatch
+            #nfunc = (hist_single[-1]['dEdX_count'] + hist_single[-1]['E_count'])/float(nbatch)
+            nfunc = hist_single[-1]['dEdX_count']/float(nbatch)
             cov = calc_cov(hist_single)
             t_diff = np.linspace(0, nfunc, cov.shape[0])
             plt.plot(t_diff, cov, label=samp_name)
+    plt.legend()
+    plt.xlabel('Gradient Evaluations')
+    plt.ylabel('Autocorrelation')
     plt.draw()
+    plt.show()
 
 
 def load_results(filename):
@@ -60,7 +65,7 @@ def save_results(history, filename):
     """
     np.savez(filename, history=history)
 
-def run_all(base_filename, num_steps=1000, nbatch=2000):
+def run_all(base_filename, num_steps=500, nbatch=100):
     #np.random.seed(0) # make experiments repeatable
 
     filename = "%s_%s.npz"%(base_filename, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -68,14 +73,13 @@ def run_all(base_filename, num_steps=1000, nbatch=2000):
 
     #np.random.seed(0) # make experiments repeatable
     distribution_list = [distributions.Gaussian(ndims=2, nbatch=nbatch, log_conditioning=6), ]
-    sampler_list = ['LAHMC', 'HMC',]
-    #sampler_list = ['HMC',]
+    sampler_list = ('LAHMC', 'HMC',)
 
     for distribution in distribution_list:
-        cw = counting_wrapper(distribution.E, distribution.dEdX)
         dist_name = distribution.description
         history[dist_name] = dict()
         for sampler_name in sampler_list:
+            cw = counting_wrapper(distribution.E, distribution.dEdX)
             if sampler_name == 'LAHMC':
                 sampler = LAHMC(distribution.Xinit, cw.E, cw.dEdX, epsilon=1., beta=0.1)
             elif sampler_name == 'HMC':
@@ -86,19 +90,14 @@ def run_all(base_filename, num_steps=1000, nbatch=2000):
             # np.random.seed(0) # make experiments repeatable
             history[dist_name][sampler_name] = []
             for ii in range(num_steps):
-                X = sampler.sample(num_steps = 25)
-                history[dist_name][sampler_name].append({'X':X, 'E_count':cw.E_count, 'dEdX_count':cw.dEdX_count})
+                X = sampler.sample(num_steps = 20)
+                history[dist_name][sampler_name].append({'X':X.copy(), 'E_count':cw.E_count, 'dEdX_count':cw.dEdX_count})
             # save the current state of the history
             save_results(history, filename)
-
-            # DEBUG
-            print np.dot(X, X.T)/nbatch
-            print np.dot(distribution.Xinit, distribution.Xinit.T)/nbatch
-        1./0
 
     return filename
 
 if __name__ == '__main__':
-    filename = run_all('qNHMC_compare', 100)
+    filename = run_all('LAHMC_compare')
     history = load_results(filename)
     plot_all_distributions(history)

@@ -27,7 +27,7 @@ class HMC_state(object):
             self.update_dEdX()
 
     def update_EX(self):
-        self.EX[:,self.active_idx] = self.parent.E(self.X[:,self.active_idx])
+        self.EX[:,self.active_idx] = self.parent.E(self.X[:,self.active_idx]).reshape((1,-1))
     def update_EV(self):
         self.EV[:,self.active_idx] = np.sum(self.V[:,self.active_idx]**2, axis=0).reshape((1,-1))/2.
     def update_dEdX(self):
@@ -35,6 +35,7 @@ class HMC_state(object):
 
     def copy(self):
         Z = HMC_state(self.X.copy(), self.parent, V=self.V.copy(), EX=self.EX.copy(), EV=self.EV.copy(), dEdX=self.dEdX.copy())
+        Z.active_idx = self.active_idx.copy()
         return Z
 
     def update(self, idx, Z):
@@ -73,10 +74,9 @@ class LAHMC(object):
 
         # keep track of how many of each kind of transition happens
         self.counter = defaultdict(int)
+        self.counter_steps = 0
 
     def E(self, X):
-        # TODO store recent history, to avoid recalculating recent
-
         # TODO use parameter flattening and unflattening
         # code from SFO
         E = self.E_external(X).reshape((1,-1))
@@ -132,7 +132,8 @@ class LAHMC(object):
             # the two states are one apart
             p_acc = self.leap_prob(Z_chain[0], Z_chain[1])
             p_acc = p_acc[:,active_idx]
-            C[0,-1,:] = p_acc
+            #print C.shape, C[0,-1,:].shape, p_acc.shape, p_acc.ravel().shape
+            C[0,-1,:] = p_acc.ravel()
             return p_acc, C
 
         cum_forward, Cl = self.leap_prob_recurse(Z_chain[:-1], C[:-1,:-1,:], active_idx)
@@ -141,13 +142,13 @@ class LAHMC(object):
         C[:0:-1,:0:-1,:] = Cl
 
         H0 = self.H(Z_chain[0])
-        H1 = self.H(Z_chain[1])
+        H1 = self.H(Z_chain[-1])
         Ediff = H0 - H1
         Ediff = Ediff[:,active_idx]
         start_state_ratio = np.exp(Ediff)
-        prob = np.min(np.vstack((1. - cum_forward, start_state_ratio*(1. - cum_reverse))), 0)
+        prob = np.min(np.vstack((1. - cum_forward, start_state_ratio*(1. - cum_reverse))), axis=0).reshape((1,-1))
         cumu = cum_forward + prob
-        C[0,-1,:] = cumu
+        C[0,-1,:] = cumu.ravel()
         return cumu, C
 
     def sampling_iteration(self):
@@ -166,8 +167,8 @@ class LAHMC(object):
         for kk in range(self.K):
             Z_chain.append(self.L(Z_chain[-1].copy()))
             # recursively calculate the cumulative probability of doing this many leaps
-            p_cum, Cl = self.leap_prob_recurse(Z_chain, C[:kk+1, :kk+1, active_idx], active_idx)
-            C[:kk+1, :kk+1, active_idx] = Cl
+            p_cum, Cl = self.leap_prob_recurse(Z_chain, C[:kk+2, :kk+2, active_idx], active_idx)
+            C[:kk+2, :kk+2, active_idx] = Cl
             # find all the samples that did this number of leaps, and update self.state with them
             accepted_idx = active_idx[p_cum.ravel() >= rand_comparison[active_idx]]
             self.counter['L%d'%(kk+1)] += len(accepted_idx)
@@ -199,6 +200,7 @@ class LAHMC(object):
             if self.display > 1:
                 print "sampling step %d / %d,"%(si+1, num_steps),
             self.sampling_iteration()
+            self.counter_steps += 1
             if self.display > 1:
                 print 
 
@@ -211,4 +213,4 @@ class LAHMC(object):
                 print "%s:%g"%(k, self.counter[k]/float(tot)),
             print
 
-        return self.state.X
+        return self.state.X.copy()
