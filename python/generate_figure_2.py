@@ -49,7 +49,6 @@ def plot_all_distributions(history):
 
 	for dist_name in history.keys():
 		plt.figure()
-		plt.suptitle(dist_name)
 		for samp_name in history[dist_name].keys():
 			hist_single = history[dist_name][samp_name]
 			nsteps = len(hist_single)
@@ -82,7 +81,7 @@ def save_results(history, filename):
 	"""
 	np.savez(filename, history=history)
 
-def run_all(base_filename, num_steps=100, nbatch=100):
+def run_all(base_filename, num_steps=200, nbatch=100):
 	"""
 	Run all the samplers for all the target distributions, and save the
 	resulting history.
@@ -116,7 +115,7 @@ def run_all(base_filename, num_steps=100, nbatch=100):
 			print "\n\nSampling from %s using %s"%(dist_name, sampler_name)
 			history[dist_name][sampler_name] = []
 			for ii in range(num_steps):
-				X = sampler.sample(num_steps = 50)
+				X = sampler.sample(num_steps = 10)
 				history[dist_name][sampler_name].append({'X':X.copy(), 'E_count':cw.E_count, 'dEdX_count':cw.dEdX_count})
 			# save the current state of the history
 			save_results(history, filename)
