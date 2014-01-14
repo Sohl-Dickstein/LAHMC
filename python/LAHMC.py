@@ -81,7 +81,7 @@ class LAHMC(object):
 	See generate_figure_2.py for an example usage.
 	"""
 
-	def __init__(self, Xinit, E, dEdX, epsilon=0.1, alpha=0.2, beta=None, num_leapfrog_steps=10, num_look_ahead_steps=4, display=1):
+	def __init__(self, Xinit, E, dEdX, epsilon=0.1, alpha=0.2, beta=None, num_leapfrog_steps=10, num_look_ahead_steps=4, display=1, **kwargs):
 		"""
 		Implements Look Ahead Hamiltonian Monte Carlo (LAHMC) and standard 
 		Hamiltonian Monte Carlo (HMC).  See the associated paper:
@@ -97,9 +97,8 @@ class LAHMC(object):
 		E - Function that returns the energy.  E(X) should return
 		  a 1x[batch size] array, with each entry corresponding to the energy
 		  of the corresponding column of X.
-		dEdX - Function that returns the gradient.  dEdX(X, varargin{:}) should
-		  return an array of the same size as X,
-		  [number dimensions]x[batch size].
+		dEdX - Function that returns the gradient.  dEdX(X) should return an
+		  array of the same size as X, [number dimensions]x[batch size].
 
 		Keyword arguments:
 		epsilon - Step length. (default 0.1)
@@ -113,7 +112,13 @@ class LAHMC(object):
 		  operator. (default 4)
 		display - How verbose to be with console logging.  Set to 0 to disable
 		  logging. (default 1)
+
+		Any additional *keyword* arguments will be passed through as
+		additional keyword arguments to the energy and gradient function.
 		"""
+
+		self.kwargs = kwargs
+
 		self.M = num_leapfrog_steps
 		self.K = num_look_ahead_steps
 		self.N = Xinit.shape[0]
@@ -138,14 +143,14 @@ class LAHMC(object):
 		"""compute energy function at X"""
 		# TODO use parameter flattening and unflattening
 		# code from SFO
-		E = self.E_external(X).reshape((1,-1))
+		E = self.E_external(X, **self.kwargs).reshape((1,-1))
 		return E
 
 	def dEdX(self, X):
 		"""compute energy function gradient at X"""
 		# TODO use parameter flattening and unflattening
 		# code from SFO
-		dEdX = self.dEdX_external(X)
+		dEdX = self.dEdX_external(X, **self.kwargs)
 		return dEdX
 
 	def H(self, state):
