@@ -1,12 +1,4 @@
 """
-Implements Look Ahead Hamiltonian Monte Carlo (LAHMC) and standard 
-Hamiltonian Monte Carlo (HMC).  See the associated paper:
-   Sohl-Dickstein, Jascha and Mudigonda, Mayur and DeWeese, Michael R.
-   Hamiltonian Monte Carlo Without Detailed Balance.
-   International Conference on Machine Learning. 2014
-
-See generate_figure_2.py for an example usage.
-
 Author: Jascha Sohl-Dickstein, Mayur Mudigonda (2014)
 Web: http://redwood.berkeley.edu/mayur
 Web: http://redwood.berkeley.edu/jascha
@@ -18,69 +10,7 @@ Attribution-Noncommercial License.
 import numpy as np
 from collections import defaultdict
 
-class HMC_state(object):
-	""" Holds all the state variables for HMC particles."""
-
-	def __init__(self, X, parent, V=None, EX=None, EV=None, dEdX=None):
-		"""
-		Initialize HMC particle states.  Called by LAHMC class.
-		Not user facing.
-		"""
-		self.parent = parent
-		self.X = X
-		self.V = V
-		nbatch = X.shape[1]
-		self.active_idx = np.arange(nbatch)
-		if V is None:
-			N = self.X.shape[0]
-			self.V = np.random.randn(N, nbatch)
-		self.EX = EX
-		if EX is None:
-			self.EX = np.zeros((1,nbatch))
-			self.update_EX()
-		self.EV = EV
-		if EV is None:
-			self.EV = np.zeros((1,nbatch))
-			self.update_EV()
-		self.dEdX = dEdX
-		if dEdX is None:
-			self.dEdX = np.zeros(X.shape)
-			self.update_dEdX()
-
-	def update_EX(self):
-		self.EX[:,self.active_idx] = self.parent.E(self.X[:,self.active_idx]).reshape((1,-1))
-	def update_EV(self):
-		self.EV[:,self.active_idx] = np.sum(self.V[:,self.active_idx]**2, axis=0).reshape((1,-1))/2.
-	def update_dEdX(self):
-		self.dEdX[:,self.active_idx] = self.parent.dEdX(self.X[:,self.active_idx])
-
-	def copy(self):
-		Z = HMC_state(self.X.copy(), self.parent, V=self.V.copy(), EX=self.EX.copy(), EV=self.EV.copy(), dEdX=self.dEdX.copy())
-		Z.active_idx = self.active_idx.copy()
-		return Z
-
-	def update(self, idx, Z):
-		""" replace batch elements idx with state from Z """
-		if len(idx)==0:
-			return
-		self.X[:,idx] = Z.X[:,idx]
-		self.V[:,idx] = Z.V[:,idx]
-		self.EX[:,idx] = Z.EX[:,idx]
-		self.EV[:,idx] = Z.EV[:,idx]
-		self.dEdX[:,idx] = Z.dEdX[:,idx]
-
-
 class LAHMC(object):
-	"""
-	Implements Look Ahead Hamiltonian Monte Carlo (LAHMC) and standard 
-	Hamiltonian Monte Carlo (HMC).  See the associated paper:
-	   Sohl-Dickstein, Jascha and Mudigonda, Mayur and DeWeese, Michael R.
-	   Hamiltonian Monte Carlo Without Detailed Balance.
-	   International Conference on Machine Learning. 2014
-
-	See generate_figure_2.py for an example usage.
-	"""
-
 	def __init__(self, Xinit, E, dEdX, epsilon=0.1, alpha=0.2, beta=None, num_leapfrog_steps=10, num_look_ahead_steps=4, display=1, **kwargs):
 		"""
 		Implements Look Ahead Hamiltonian Monte Carlo (LAHMC) and standard 
@@ -284,3 +214,54 @@ class LAHMC(object):
 			print
 
 		return self.state.X.copy()
+
+class HMC_state(object):
+	""" Holds all the state variables for HMC particles."""
+
+	def __init__(self, X, parent, V=None, EX=None, EV=None, dEdX=None):
+		"""
+		Initialize HMC particle states.  Called by LAHMC class.
+		Not user facing.
+		"""
+		self.parent = parent
+		self.X = X
+		self.V = V
+		nbatch = X.shape[1]
+		self.active_idx = np.arange(nbatch)
+		if V is None:
+			N = self.X.shape[0]
+			self.V = np.random.randn(N, nbatch)
+		self.EX = EX
+		if EX is None:
+			self.EX = np.zeros((1,nbatch))
+			self.update_EX()
+		self.EV = EV
+		if EV is None:
+			self.EV = np.zeros((1,nbatch))
+			self.update_EV()
+		self.dEdX = dEdX
+		if dEdX is None:
+			self.dEdX = np.zeros(X.shape)
+			self.update_dEdX()
+
+	def update_EX(self):
+		self.EX[:,self.active_idx] = self.parent.E(self.X[:,self.active_idx]).reshape((1,-1))
+	def update_EV(self):
+		self.EV[:,self.active_idx] = np.sum(self.V[:,self.active_idx]**2, axis=0).reshape((1,-1))/2.
+	def update_dEdX(self):
+		self.dEdX[:,self.active_idx] = self.parent.dEdX(self.X[:,self.active_idx])
+
+	def copy(self):
+		Z = HMC_state(self.X.copy(), self.parent, V=self.V.copy(), EX=self.EX.copy(), EV=self.EV.copy(), dEdX=self.dEdX.copy())
+		Z.active_idx = self.active_idx.copy()
+		return Z
+
+	def update(self, idx, Z):
+		""" replace batch elements idx with state from Z """
+		if len(idx)==0:
+			return
+		self.X[:,idx] = Z.X[:,idx]
+		self.V[:,idx] = Z.V[:,idx]
+		self.EX[:,idx] = Z.EX[:,idx]
+		self.EV[:,idx] = Z.EV[:,idx]
+		self.dEdX[:,idx] = Z.dEdX[:,idx]
