@@ -36,6 +36,7 @@
 %   state - Holds the complete state of the sampler, and can be passed back in
 %     to resume sampling where the last function call to LAHMC left off.
 %
+% See README.md for example code calling LAHMC.
 %
 % Author: Mayur Mudigonda, Jascha Sohl-Dickstein (2014)
 % Web: http://redwood.berkeley.edu/mayur
