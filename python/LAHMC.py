@@ -49,6 +49,8 @@ class LAHMC(object):
 
 		Any additional *keyword* arguments will be passed through as
 		additional keyword arguments to the energy and gradient function.
+
+		See README.md for simple example code.
 		"""
 
 		self.args = args
