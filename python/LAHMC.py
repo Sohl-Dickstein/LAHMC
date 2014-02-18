@@ -11,7 +11,7 @@ import numpy as np
 from collections import defaultdict
 
 class LAHMC(object):
-	def __init__(self, Xinit, E, dEdX, epsilon=0.1, alpha=0.2, beta=None, num_leapfrog_steps=10, num_look_ahead_steps=4, display=1, **kwargs):
+	def __init__(self, Xinit, E, dEdX, epsilon=0.1, alpha=0.2, beta=None, num_leapfrog_steps=10, num_look_ahead_steps=4, display=1, args=(), kwargs={}):
 		"""
 		Implements Look Ahead Hamiltonian Monte Carlo (LAHMC) and standard 
 		Hamiltonian Monte Carlo (HMC).  See the associated paper:
@@ -42,11 +42,16 @@ class LAHMC(object):
 		  operator. (default 4)
 		display - How verbose to be with console logging.  Set to 0 to disable
 		  logging. (default 1)
+		args - A list of additional arguments that will be passed through to E
+		  and dEdX.
+		kwargs - A dictionary of additional keyword arguments that will be
+		  passed through to E and dEdX.
 
 		Any additional *keyword* arguments will be passed through as
 		additional keyword arguments to the energy and gradient function.
 		"""
 
+		self.args = args
 		self.kwargs = kwargs
 
 		self.M = num_leapfrog_steps
@@ -73,14 +78,14 @@ class LAHMC(object):
 		"""compute energy function at X"""
 		# TODO use parameter flattening and unflattening
 		# code from SFO
-		E = self.E_external(X, **self.kwargs).reshape((1,-1))
+		E = self.E_external(X, *self.args, **self.kwargs).reshape((1,-1))
 		return E
 
 	def dEdX(self, X):
 		"""compute energy function gradient at X"""
 		# TODO use parameter flattening and unflattening
 		# code from SFO
-		dEdX = self.dEdX_external(X, **self.kwargs)
+		dEdX = self.dEdX_external(X, *self.args, **self.kwargs)
 		return dEdX
 
 	def H(self, state):
