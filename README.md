@@ -7,7 +7,7 @@ LAHMC is described in the paper:<br>
 > Sohl-Dickstein, Jascha and Mudigonda, Mayur and DeWeese, Michael R.<br>
 > Hamiltonian Monte Carlo Without Detailed Balance.<br>
 > International Conference on Machine Learning. 2014<br>
-> http://jmlr.org/proceedings/papers/v32/sohl-dickstein14.pdf
+> http://arxiv.org/abs/1409.5191
 
 ## Example Python Code
 
