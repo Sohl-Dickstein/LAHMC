@@ -47,9 +47,6 @@ class LAHMC(object):
 		kwargs - A dictionary of additional keyword arguments that will be
 		  passed through to E and dEdX.
 
-		Any additional *keyword* arguments will be passed through as
-		additional keyword arguments to the energy and gradient function.
-
 		See README.md for simple example code.
 		"""
 
