@@ -210,8 +210,9 @@ function [state] = leap_HMC(state,ind,opts,varargin)
     global funcevals_inc
 
     if isempty(ind)
-        ind = (ones(size(state.V,2),1)>0);
+        ind = true(size(state.V,2),1);
     end
+    Nind = sum(ind);
 
     f_E = opts.E;
     f_dEdX = opts.dEdX;
@@ -220,30 +221,29 @@ function [state] = leap_HMC(state,ind,opts,varargin)
     M = opts.M;
 
     % run M leapfrog steps
-    V0 = state.V; V0(:) = 0;
-    X0 = state.X; X0(:) = 0;
-    E0 = state.E; E0(:) = 0;
-    V1 = state.V; V1(:) = 0;
-    X1 = state.X; X1(:) = 0;
-    E1 = state.E; E1(:) = 0;
+    V = state.V(:,ind);
+    X = state.X(:,ind);
+    dEdX = state.dEdX(:,ind);
 
     for ii=1:M
-        funcevals_inc = funcevals_inc + sum(ind>0);
+        funcevals_inc = funcevals_inc + Nind;
         
-        V0(:,ind) = state.V(:,ind);
-        X0(:,ind) = state.X(:,ind);
-        E0(:,ind) = state.E(:,ind);
-        dEdX0(:,ind) = state.dEdX(:,ind);
-        Vhalf(:,ind) = V0(:,ind) - epsilon/2 * dEdX0(:,ind);    
-        X1(:,ind) = X0(:,ind) + epsilon * Vhalf(:,ind);
-        dEdX1(:,ind) = f_dEdX( X1(:,ind), varargin{:} );
-        V1(:,ind) = Vhalf(:,ind) - epsilon/2 * dEdX1(:,ind);
-        state.V(:,ind) = V1(:,ind);
-        state.X(:,ind) = X1(:,ind);
-        state.E(:,ind) = E1(:,ind);
-        state.dEdX(:,ind) = dEdX1(:,ind);
+        V0 = V;
+        X0 = X;
+        dEdX0 = dEdX;
+        Vhalf = V0 - epsilon/2 * dEdX0;
+        X1 = X0 + epsilon * Vhalf;
+        dEdX1 = f_dEdX( X1, varargin{:} );
+        V1 = Vhalf - epsilon/2 * dEdX1;
+
+        V = V1;
+        X = X1;
+        dEdX = dEdX1;
     end
-    state.E(:,ind) = f_E( state.X(:,ind), varargin{:});
+    state.X(:,ind) = X;
+    state.V(:,ind) = V;
+    state.dEdX(:,ind) = dEdX;
+    state.E(:,ind) = f_E( X, varargin{:});
 end
 
 function [H] = hamiltonian_HMC(state,ind)
