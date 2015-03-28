@@ -228,11 +228,8 @@ function [state] = leap_HMC(state,ind,opts,varargin)
     for ii=1:M
         funcevals_inc = funcevals_inc + Nind;
         
-        V0 = V;
-        X0 = X;
-        dEdX0 = dEdX;
-        Vhalf = V0 - epsilon/2 * dEdX0;
-        X1 = X0 + epsilon * Vhalf;
+        Vhalf = V - epsilon/2 * dEdX;
+        X1 = X + epsilon * Vhalf;
         dEdX1 = f_dEdX( X1, varargin{:} );
         V1 = Vhalf - epsilon/2 * dEdX1;
 
